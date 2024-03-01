@@ -2,6 +2,7 @@ import pandas as pd
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
+#Leitura das planilhas, desconsiderando as linhas de cabeçalho da planilha AX
 def ler_planilha(caminho, skiprows=0, encoding='utf-8'):
     if caminho.endswith('.xlsx') or caminho.endswith('.xls'):
         return pd.read_excel(caminho, skiprows=skiprows)
@@ -14,6 +15,9 @@ def ler_planilha(caminho, skiprows=0, encoding='utf-8'):
     else:
         raise ValueError("Formato de arquivo não suportado.")
 
+#Repassando os campos de busca, ou seja, relacionando as Tabelas com colunas correspondentes
+#Coluna 'Fatura' da Planilha do AX
+#Coluna 'Número do RPS' da Planilha Prefeitura
 def encontrar_nfs_e(planilha_ax, planilha_prefeitura):
     ax_df = ler_planilha(planilha_ax, skiprows=8)  
     prefeitura_df = ler_planilha(planilha_prefeitura)
