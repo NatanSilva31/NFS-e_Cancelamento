@@ -7,10 +7,10 @@ def ler_planilha(caminho, skiprows=0, encoding='utf-8'):
         return pd.read_excel(caminho, skiprows=skiprows)
     elif caminho.endswith('.csv'):
         try:
-            return pd.read_csv(caminho, encoding=encoding, skiprows=skiprows)
+            return pd.read_csv(caminho, encoding=encoding, skiprows=skiprows, on_bad_lines='warn')
         except UnicodeDecodeError:
             
-            return pd.read_csv(caminho, encoding='iso-8859-1', skiprows=skiprows)
+            return pd.read_csv(caminho, encoding='iso-8859-1', skiprows=skiprows, on_bad_lines='warn')
     else:
         raise ValueError("Formato de arquivo não suportado.")
 
