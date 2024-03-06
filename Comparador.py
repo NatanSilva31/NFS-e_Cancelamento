@@ -19,7 +19,7 @@ def ler_planilha(caminho, skiprows=0, encoding='utf-8'):
 #Coluna 'Fatura' da Planilha do AX
 #Coluna 'Número do RPS' da Planilha Prefeitura
 def encontrar_nfs_e(planilha_ax, planilha_prefeitura):
-    ax_df = ler_planilha(planilha_ax, skiprows=8)  
+    ax_df = ler_planilha(planilha_ax, skiprows=8)
     prefeitura_df = ler_planilha(planilha_prefeitura)
     ax_df['Fatura'] = ax_df['Fatura'].astype(float)
     prefeitura_df['Número do RPS'] = prefeitura_df['Número do RPS'].astype(float)
