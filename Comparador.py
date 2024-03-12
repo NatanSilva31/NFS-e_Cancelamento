@@ -8,26 +8,40 @@ def ler_planilha(caminho, skiprows=0, encoding='utf-8'):
         return pd.read_excel(caminho, skiprows=skiprows)
     elif caminho.endswith('.csv'):
         try:
-            return pd.read_csv(caminho, encoding=encoding, skiprows=skiprows, on_bad_lines='warn')
+            # Tenta ler o arquivo com a codificação padrão e delimitador detectado automaticamente, ou seja, delimitado por ;
+            return pd.read_csv(caminho, encoding=encoding, skiprows=skiprows, on_bad_lines='warn', delimiter=';')
         except UnicodeDecodeError:
-            
-            return pd.read_csv(caminho, encoding='iso-8859-1', skiprows=skiprows, on_bad_lines='warn')
+            # Tenta novamente com uma codificação diferente se a primeira falhar
+            return pd.read_csv(caminho, encoding='iso-8859-1', skiprows=skiprows, on_bad_lines='warn', delimiter=';')
     else:
         raise ValueError("Formato de arquivo não suportado.")
 
 #Repassando os campos de busca, ou seja, relacionando as Tabelas com colunas correspondentes
 #Coluna 'Fatura' da Planilha do AX
-#Coluna 'Número do RPS' da Planilha Prefeitura
+#Coluna 'Número do RPS' da Planilha Prefeitura SP
+#Coluna 'Fatura' da Planilha do AX
+#Coluna 'Nº da Nota Fiscal Eletrônica' da Planilha Prefeitura RJ
 def encontrar_nfs_e(planilha_ax, planilha_prefeitura):
     ax_df = ler_planilha(planilha_ax, skiprows=8)
     prefeitura_df = ler_planilha(planilha_prefeitura)
-    ax_df['Fatura'] = ax_df['Fatura'].astype(float)
-    prefeitura_df['Número do RPS'] = prefeitura_df['Número do RPS'].astype(float)
+    ax_df['Fatura'] = ax_df['Fatura'].astype(str).str.strip()  # Convertendo para string e removendo espaços em branco
     
-    resultado = pd.merge(ax_df[['Fatura', 'Status']], prefeitura_df[['Número do RPS', 'Nº NFS-e']], left_on='Fatura', right_on='Número do RPS', how='left')
-    resultado_final = resultado[['Fatura', 'Status', 'Nº NFS-e']]
-    resultado_final = resultado_final.dropna()
+    # Verifica qual coluna está presente na planilha da prefeitura
+    coluna_prefeitura = ""
+    if 'Número do RPS' in prefeitura_df.columns:
+        coluna_prefeitura = 'Número do RPS'
+        prefeitura_df[coluna_prefeitura] = prefeitura_df[coluna_prefeitura].astype(str).str.strip()  # Convertendo para string
+    elif 'Nº da Nota Fiscal Eletrônica' in prefeitura_df.columns:
+        coluna_prefeitura = 'Nº da Nota Fiscal Eletrônica'
+        prefeitura_df[coluna_prefeitura] = prefeitura_df[coluna_prefeitura].astype(str).str.strip()  # Convertendo para string
+    else:
+        raise ValueError("A planilha da prefeitura deve conter a coluna 'Número do RPS' ou 'Nº da Nota Fiscal Eletrônica'")
+    
+    # Realiza a comparação com base na coluna identificada
+    resultado = pd.merge(ax_df[['Fatura', 'Status']], prefeitura_df[[coluna_prefeitura]], left_on='Fatura', right_on=coluna_prefeitura, how='left')
+    resultado_final = resultado.dropna()
     return resultado_final
+
 
 class Application(tk.Tk):
     def __init__(self):
