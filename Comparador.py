@@ -1,14 +1,13 @@
 import pandas as pd
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
-
 #Leitura das planilhas, desconsiderando as linhas de cabeçalho da planilha AX
 def ler_planilha(caminho, skiprows=0, encoding='utf-8'):
     if caminho.endswith('.xlsx') or caminho.endswith('.xls'):
         return pd.read_excel(caminho, skiprows=skiprows)
     elif caminho.endswith('.csv'):
         try:
-            # Tenta ler o arquivo com a codificação padrão e delimitador detectado automaticamente, ou seja, delimitado por ;
+         # Tenta ler o arquivo com a codificação padrão e delimitador detectado automaticamente, ou seja, delimitado por ;
             return pd.read_csv(caminho, encoding=encoding, skiprows=skiprows, on_bad_lines='warn', delimiter=';')
         except UnicodeDecodeError:
             # Tenta novamente com uma codificação diferente se a primeira falhar
@@ -18,28 +17,31 @@ def ler_planilha(caminho, skiprows=0, encoding='utf-8'):
 
 #Repassando os campos de busca, ou seja, relacionando as Tabelas com colunas correspondentes
 #Coluna 'Fatura' da Planilha do AX
-#Coluna 'Número do RPS' da Planilha Prefeitura SP
-#Coluna 'Fatura' da Planilha do AX
-#Coluna 'Nº da Nota Fiscal Eletrônica' da Planilha Prefeitura RJ
+#Coluna 'Número do RPS' da Planilha Prefeitura
 def encontrar_nfs_e(planilha_ax, planilha_prefeitura):
     ax_df = ler_planilha(planilha_ax, skiprows=8)
     prefeitura_df = ler_planilha(planilha_prefeitura)
-    ax_df['Fatura'] = ax_df['Fatura'].astype(str).str.strip()  # Convertendo para string e removendo espaços em branco
+    ax_df['Fatura'] = ax_df['Fatura'].astype(float)
+    prefeitura_df['Número do RPS'] = prefeitura_df['Número do RPS'].astype(float)
+
+    # Determina quais colunas estão disponíveis para o merge
+    colunas_prefeitura = ['Número do RPS']
+    if 'Nº NFS-e' in prefeitura_df.columns:
+        colunas_prefeitura.append('Nº NFS-e')
+    if 'Nº da Nota Fiscal Eletrônica' in prefeitura_df.columns:
+        colunas_prefeitura.append('Nº da Nota Fiscal Eletrônica')
     
-    # Verifica qual coluna está presente na planilha da prefeitura
-    coluna_prefeitura = ""
-    if 'Número do RPS' in prefeitura_df.columns:
-        coluna_prefeitura = 'Número do RPS'
-        prefeitura_df[coluna_prefeitura] = prefeitura_df[coluna_prefeitura].astype(str).str.strip()  # Convertendo para string
-    elif 'Nº da Nota Fiscal Eletrônica' in prefeitura_df.columns:
-        coluna_prefeitura = 'Nº da Nota Fiscal Eletrônica'
-        prefeitura_df[coluna_prefeitura] = prefeitura_df[coluna_prefeitura].astype(str).str.strip()  # Convertendo para string
-    else:
-        raise ValueError("A planilha da prefeitura deve conter a coluna 'Número do RPS' ou 'Nº da Nota Fiscal Eletrônica'")
+    # Realiza o merge com base nas colunas disponíveis
+    resultado = pd.merge(ax_df[['Fatura', 'Status']], prefeitura_df[colunas_prefeitura], left_on='Fatura', right_on='Número do RPS', how='left')
     
-    # Realiza a comparação com base na coluna identificada
-    resultado = pd.merge(ax_df[['Fatura', 'Status']], prefeitura_df[[coluna_prefeitura]], left_on='Fatura', right_on=coluna_prefeitura, how='left')
-    resultado_final = resultado.dropna()
+    # Seleciona as colunas para o resultado final, verificando se elas existem antes de tentar acessá-las
+    colunas_resultado = ['Fatura', 'Status']
+    if 'Nº NFS-e' in resultado.columns:
+        colunas_resultado.append('Nº NFS-e')
+    if 'Nº da Nota Fiscal Eletrônica' in resultado.columns:
+        colunas_resultado.append('Nº da Nota Fiscal Eletrônica')
+    
+    resultado_final = resultado[colunas_resultado].dropna()
     return resultado_final
 
 
@@ -53,7 +55,6 @@ class Application(tk.Tk):
         self.tab_nfs_e = ttk.Frame(self.notebook)
         self.notebook.add(self.tab_nfs_e, text="Comparativo NFS-e")
         self.configurar_tab_nfs_e()
-
     def configurar_tab_nfs_e(self):
         frame = ttk.Frame(self.tab_nfs_e)
         frame.pack(pady=20)
@@ -68,7 +69,6 @@ class Application(tk.Tk):
         
         self.text_result = tk.Text(self.tab_nfs_e, height=10, width=75)
         self.text_result.pack(pady=20)
-
         frame_botoes_inferiores = ttk.Frame(self.tab_nfs_e)
         frame_botoes_inferiores.pack(pady=10)
         
@@ -81,7 +81,6 @@ class Application(tk.Tk):
         self.ax_file_path = ""
         self.prefeitura_file_path = ""
         self.last_result = None
-
     def load_file(self, file_type):
         file_path = filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx;*.xls"), ("CSV files", "*.csv")])
         if file_path:
@@ -91,7 +90,6 @@ class Application(tk.Tk):
             elif file_type == "prefeitura":
                 self.prefeitura_file_path = file_path
                 self.btn_select_prefeitura.config(bg='green')
-
     def process_files(self):
         if self.ax_file_path and self.prefeitura_file_path:
             try:
@@ -102,18 +100,19 @@ class Application(tk.Tk):
                 self.show_error(str(e))
         else:
             messagebox.showerror("Erro", "Por favor, selecione ambos os arquivos antes de processar.")
-
+            
     def show_result(self, resultado):
         self.text_result.delete('1.0', tk.END)
         if not resultado.empty:
-            self.text_result.insert(tk.END, resultado.to_string(index=False))
+            resultado_str = resultado.applymap(lambda x: int(x) if isinstance(x, float) and x.is_integer() else x)
+            self.text_result.insert(tk.END, resultado_str.to_string(index=False))
         else:
             self.text_result.insert(tk.END, "Nenhuma correspondência encontrada.")
-
+            
     def show_error(self, message):
         self.text_result.delete('1.0', tk.END)
         self.text_result.insert(tk.END, message)
-
+        
     def export_result(self):
         if self.last_result is not None and not self.last_result.empty:
             file_type = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx"), ("CSV files", "*.csv")])
@@ -127,7 +126,7 @@ class Application(tk.Tk):
                 messagebox.showinfo("Ação necessária", "Exportação cancelada.")
         else:
             messagebox.showerror("Erro", "Nenhum resultado para exportar. Por favor, processe os arquivos primeiro.")
-
+            
     def clear_results(self):
         self.text_result.delete('1.0', tk.END)
         self.btn_select_ax.config(bg='light grey')
@@ -135,7 +134,7 @@ class Application(tk.Tk):
         self.ax_file_path = ""
         self.prefeitura_file_path = ""
         self.last_result = None
-
+        
 if __name__ == "__main__":
     app = Application()
     app.mainloop()
