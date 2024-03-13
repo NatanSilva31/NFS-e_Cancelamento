@@ -25,7 +25,7 @@ def comparar_planilhas(planilha_ax, planilha_clinica):
 
     return pd.DataFrame(faltando_na_clinica, columns=['NFAX']), pd.DataFrame(faltando_no_ax, columns=['Fatura'])
 
-class Application(tk.Tk):
+class ApplicationClinica(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Comparativo de Planilhas")
@@ -81,5 +81,5 @@ class Application(tk.Tk):
             messagebox.showinfo("Sucesso", f"Dados {coluna} exportados com sucesso para Excel.")
 
 if __name__ == "__main__":
-    app = Application()
+    app = ApplicationClinica()
     app.mainloop()

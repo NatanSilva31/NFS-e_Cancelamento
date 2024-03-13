@@ -45,7 +45,7 @@ def encontrar_nfs_e(planilha_ax, planilha_prefeitura):
     return resultado_final
 
 
-class Application(tk.Tk):
+class ApplicationComparador(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Sistema de Validação")
@@ -136,5 +136,5 @@ class Application(tk.Tk):
         self.last_result = None
         
 if __name__ == "__main__":
-    app = Application()
+    app = ApplicationComparador()
     app.mainloop()
