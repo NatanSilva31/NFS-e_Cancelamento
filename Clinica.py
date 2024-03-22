@@ -17,9 +17,9 @@ def comparar_planilhas(planilha_ax, planilha_clinica):
     ax_df = ler_planilha(planilha_ax, skiprows=8)  # Pula as 8 primeiras linhas como cabeçalho na Planilha AX
     clinica_df = ler_planilha(planilha_clinica)  # Lê a Planilha Clínica diretamente
 
-    ax_df = ax_df.dropna(subset=['Fatura'])  # Remove linhas com 'Fatura' nulo
-    ax_df['Fatura'] = ax_df['Fatura'].apply(lambda x: str(int(x)) if pd.notnull(x) else x)
-    clinica_df['NFAX'] = clinica_df['NFAX'].astype(str)
+    # Conversão direta para strings para evitar problemas de conversão
+    ax_df['Fatura'] = ax_df['Fatura'].astype(str).str.split('.').str[0]  # Remove casas decimais e converte para string
+    clinica_df['NFAX'] = clinica_df['NFAX'].astype(str).str.split('.').str[0]  # Idem
 
     faltando_no_ax = ax_df.loc[~ax_df['Fatura'].isin(clinica_df['NFAX']), 'Fatura'].drop_duplicates().reset_index(drop=True)
     faltando_na_clinica = clinica_df.loc[~clinica_df['NFAX'].isin(ax_df['Fatura']), 'NFAX'].drop_duplicates().reset_index(drop=True)
