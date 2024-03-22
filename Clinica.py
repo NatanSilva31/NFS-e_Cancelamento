@@ -5,12 +5,13 @@ from tkinter import filedialog, messagebox, ttk
 def ler_planilha(caminho, skiprows=None):
     """Lê a planilha especificada e retorna um DataFrame."""
     if caminho.endswith(('.xlsx', '.xls')):
-        df = pd.read_excel(caminho, skiprows=skiprows)
+        df = pd.read_excel(caminho, skiprows=skiprows, engine='openpyxl')
     elif caminho.endswith('.csv'):
         df = pd.read_csv(caminho, skiprows=skiprows, delimiter=';')
     else:
         raise ValueError("Formato de arquivo não suportado.")
     return df
+
 
 def comparar_planilhas(planilha_ax, planilha_clinica):
     ax_df = ler_planilha(planilha_ax, skiprows=8)  # Pula as 8 primeiras linhas como cabeçalho na Planilha AX
