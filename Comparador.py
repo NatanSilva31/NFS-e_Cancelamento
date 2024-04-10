@@ -45,16 +45,24 @@ def encontrar_nfs_e(planilha_ax, planilha_prefeitura):
     return resultado_final
 
 
-class ApplicationComparador(tk.Tk):
-    def __init__(self):
-        super().__init__()
+class ApplicationComparador(tk.Toplevel):
+    def __init__(self, master=None):
+        super().__init__(master)  # Chama o inicializador da classe base corretamente
         self.title("Sistema de Validação")
         self.geometry("800x600")
+        self.create_widgets()
+        self.ax_file_path = ""  # Inicializa a variável
+        self.prefeitura_file_path = ""  # Inicializa a variável
+
+    def create_widgets(self):
         self.notebook = ttk.Notebook(self)
         self.notebook.pack(expand=True, fill="both")
+        
         self.tab_nfs_e = ttk.Frame(self.notebook)
         self.notebook.add(self.tab_nfs_e, text="Comparativo NFS-e")
+        
         self.configurar_tab_nfs_e()
+
     def configurar_tab_nfs_e(self):
         frame = ttk.Frame(self.tab_nfs_e)
         frame.pack(pady=20)
@@ -69,6 +77,7 @@ class ApplicationComparador(tk.Tk):
         
         self.text_result = tk.Text(self.tab_nfs_e, height=10, width=75)
         self.text_result.pack(pady=20)
+        
         frame_botoes_inferiores = ttk.Frame(self.tab_nfs_e)
         frame_botoes_inferiores.pack(pady=10)
         

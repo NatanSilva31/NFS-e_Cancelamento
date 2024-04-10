@@ -26,12 +26,14 @@ def comparar_planilhas(planilha_ax, planilha_clinica):
 
     return pd.DataFrame(faltando_na_clinica, columns=['NFAX']), pd.DataFrame(faltando_no_ax, columns=['Fatura'])
 
-class ApplicationClinica(tk.Tk):
-    def __init__(self):
-        super().__init__()
+class ApplicationClinica(tk.Toplevel):
+    def __init__(self, master=None):
+        super().__init__(master)
         self.title("Comparativo de Planilhas")
         self.geometry("1000x600")
         self.create_widgets()
+        self.ax_file_path = None  # Inicializa a variável
+        self.clinica_file_path = None  # Inicializa a variável
 
     def create_widgets(self):
         top_frame = tk.Frame(self)
