@@ -91,7 +91,7 @@ class ApplicationComparador(tk.Toplevel):
         self.prefeitura_file_path = ""
         self.last_result = None
     def load_file(self, file_type):
-        file_path = filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx;*.xls"), ("CSV files", "*.csv")])
+        file_path = filedialog.askopenfilename()
         if file_path:
             if file_type == "ax":
                 self.ax_file_path = file_path

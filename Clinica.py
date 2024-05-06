@@ -51,7 +51,7 @@ class ApplicationClinica(tk.Toplevel):
         self.result_frame.pack(fill=tk.BOTH, expand=True)
 
     def load_file(self, file_type):
-        file_path = filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx;*.xls"), ("CSV files", "*.csv")])
+        file_path = filedialog.askopenfilename()
         if file_path:
             setattr(self, f"{file_type}_file_path", file_path)
 
