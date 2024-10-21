@@ -1,13 +1,15 @@
 import pandas as pd
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
-#Leitura das planilhas, desconsiderando as linhas de cabeçalho da planilha AX
+import threading
+
+# Leitura das planilhas, desconsiderando as linhas de cabeçalho da planilha AX
 def ler_planilha(caminho, skiprows=0, encoding='utf-8'):
     if caminho.endswith('.xlsx') or caminho.endswith('.xls'):
         return pd.read_excel(caminho, skiprows=skiprows)
     elif caminho.endswith('.csv'):
         try:
-         # Tenta ler o arquivo com a codificação padrão e delimitador detectado automaticamente, ou seja, delimitado por ;
+            # Tenta ler o arquivo com a codificação padrão e delimitador detectado automaticamente, ou seja, delimitado por ;
             return pd.read_csv(caminho, encoding=encoding, skiprows=skiprows, on_bad_lines='warn', delimiter=';')
         except UnicodeDecodeError:
             # Tenta novamente com uma codificação diferente se a primeira falhar
@@ -15,9 +17,9 @@ def ler_planilha(caminho, skiprows=0, encoding='utf-8'):
     else:
         raise ValueError("Formato de arquivo não suportado.")
 
-#Repassando os campos de busca, ou seja, relacionando as Tabelas com colunas correspondentes
-#Coluna 'Fatura' da Planilha do AX
-#Coluna 'Número do RPS' da Planilha Prefeitura
+# Repassando os campos de busca, ou seja, relacionando as Tabelas com colunas correspondentes
+# Coluna 'Fatura' da Planilha do AX
+# Coluna 'Número do RPS' da Planilha Prefeitura
 def encontrar_nfs_e(planilha_ax, planilha_prefeitura):
     ax_df = ler_planilha(planilha_ax, skiprows=8)
     prefeitura_df = ler_planilha(planilha_prefeitura)
@@ -43,7 +45,6 @@ def encontrar_nfs_e(planilha_ax, planilha_prefeitura):
     
     resultado_final = resultado[colunas_resultado].dropna()
     return resultado_final
-
 
 class ApplicationComparador(tk.Toplevel):
     def __init__(self, master=None):
@@ -90,6 +91,8 @@ class ApplicationComparador(tk.Toplevel):
         self.ax_file_path = ""
         self.prefeitura_file_path = ""
         self.last_result = None
+        self.loading_label = None  # Inicializa o label de carregamento
+
     def load_file(self, file_type):
         file_path = filedialog.askopenfilename()
         if file_path:
@@ -99,17 +102,26 @@ class ApplicationComparador(tk.Toplevel):
             elif file_type == "prefeitura":
                 self.prefeitura_file_path = file_path
                 self.btn_select_prefeitura.config(bg='green')
+
     def process_files(self):
         if self.ax_file_path and self.prefeitura_file_path:
-            try:
-                self.last_result = encontrar_nfs_e(self.ax_file_path, self.prefeitura_file_path)
-                self.show_result(self.last_result)
-            except Exception as e:
-                messagebox.showerror("Erro", str(e))
-                self.show_error(str(e))
+            self.loading_label = tk.Label(self.tab_nfs_e, text="Processando...", fg="blue")
+            self.loading_label.pack()
+            thread = threading.Thread(target=self.process_files_in_thread)
+            thread.start()
         else:
             messagebox.showerror("Erro", "Por favor, selecione ambos os arquivos antes de processar.")
-            
+
+    def process_files_in_thread(self):
+        try:
+            self.last_result = encontrar_nfs_e(self.ax_file_path, self.prefeitura_file_path)
+            self.show_result(self.last_result)
+        except Exception as e:
+            messagebox.showerror("Erro", str(e))
+            self.show_error(str(e))
+        finally:
+            self.loading_label.destroy()  # Remove o indicador de carregamento
+
     def show_result(self, resultado):
         self.text_result.delete('1.0', tk.END)
         if not resultado.empty:

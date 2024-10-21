@@ -11,8 +11,17 @@ class MainApplication(tk.Tk):
         self.create_widgets()
 
     def create_widgets(self):
-        ttk.Button(self, text="Validar Clinica e AX", command=lambda: self.run_app(ApplicationClinica)).pack(pady=10)
-        ttk.Button(self, text="NF-e Canceladas", command=lambda: self.run_app(ApplicationComparador)).pack(pady=10)
+        apps = {
+            "Validar Clinica e AX": ApplicationClinica,
+            "NF-e Canceladas": ApplicationComparador,
+        }
+        
+        for text, app_class in apps.items():
+            self.create_button(text, app_class)
+
+    def create_button(self, text, app_class):
+        """Cria um botão para abrir a aplicação especificada."""
+        ttk.Button(self, text=text, command=lambda: self.run_app(app_class)).pack(pady=10)
 
     def run_app(self, AppClass):
         self.withdraw()  # Oculta a janela principal
