@@ -48,9 +48,11 @@ class ApplicationBanco(tk.Toplevel):
         super().__init__(master)
         self.title("Sistema de Validação")
         self.geometry("800x600")
+        self.iconbitmap("Imagens/512x512bb.ico")
         self.create_widgets()
         self.movimento_file_path = ""
         self.ax_file_path = ""
+        self.consolidado_df = None  # Para armazenar o DataFrame consolidado
 
     def create_widgets(self):
         self.notebook = ttk.Notebook(self)
@@ -65,25 +67,34 @@ class ApplicationBanco(tk.Toplevel):
         frame = ttk.Frame(self.tab_nfs_e)
         frame.pack(pady=20)
        
-        self.btn_select_movimento = ttk.Button(frame, text="Selecionar Planilha Movimento", command=lambda: self.load_file("movimento"))
+        self.btn_select_movimento = ttk.Button(frame, text="Selecionar Planilha Banco", command=lambda: self.load_file("movimento"))
         self.btn_select_ax = ttk.Button(frame, text="Selecionar Planilha AX", command=lambda: self.load_file("ax"))
         self.btn_select_movimento.pack(side=tk.LEFT, padx=10)
         self.btn_select_ax.pack(side=tk.LEFT, padx=10)
-       
+
+        # Frame para os botões de exportação
+        frame_botoes_exportacao = ttk.Frame(frame)
+        frame_botoes_exportacao.pack(side=tk.LEFT, padx=10)
+
+        # Botões para exportar
+
         self.btn_process = ttk.Button(frame, text="Processar", command=self.process_files)
-        self.btn_process.pack(side=tk.LEFT, padx=10)
+        self.btn_process.pack(side=tk.LEFT, padx=5)
        
         self.text_result = tk.Text(self.tab_nfs_e, height=10, width=75)
         self.text_result.pack(pady=20)
-       
+
         frame_botoes_inferiores = ttk.Frame(self.tab_nfs_e)
         frame_botoes_inferiores.pack(pady=10)
-       
+
         self.btn_export = ttk.Button(frame_botoes_inferiores, text="Exportar Resultado", command=self.export_result)
-        self.btn_export.pack(side=tk.LEFT, padx=10)
-       
+        self.btn_export.pack(side=tk.LEFT, padx=5)
+        
+        self.btn_export_consolidado = ttk.Button(frame_botoes_inferiores, text="Exportar Consolidado", command=self.export_consolidado)
+        self.btn_export_consolidado.pack(side=tk.LEFT, padx=5)
+
         self.btn_clear = ttk.Button(frame_botoes_inferiores, text="Limpar", command=self.clear_results)
-        self.btn_clear.pack(side=tk.LEFT, padx=10)
+        self.btn_clear.pack(side=tk.LEFT, padx=5)
        
         self.last_result = None
         self.loading_label = None
@@ -109,8 +120,8 @@ class ApplicationBanco(tk.Toplevel):
 
     def process_files_in_thread(self):
         try:
-            consolidado_df = consolidar_planilhas_movimento(self.movimento_file_path)
-            self.last_result = comparar_consolidado_ax(consolidado_df, self.ax_file_path)
+            self.consolidado_df = consolidar_planilhas_movimento(self.movimento_file_path)  # Armazena o DataFrame consolidado
+            self.last_result = comparar_consolidado_ax(self.consolidado_df, self.ax_file_path)
             self.show_result(self.last_result)
         except Exception as e:
             messagebox.showerror("Erro", str(e))
@@ -126,7 +137,7 @@ class ApplicationBanco(tk.Toplevel):
             resultado_filtrado = resultado[["Status", "Fatura", "Conta de cliente"]]
 
             # Remover linhas onde o Status é NaN
-            resultado_filtrado = resultado_filtrado[resultado_filtrado['Status'].notna()]
+            resultado_filtrado = resultado_filtrado[resultado_filtrado['Status'].notna() & (resultado_filtrado['Status'] != 'Paga')]
 
             # Ajustando a apresentação dos valores
             resultado_filtrado['Fatura'] = resultado_filtrado['Fatura'].apply(lambda x: int(x) if isinstance(x, float) and x.is_integer() else x)
@@ -142,15 +153,35 @@ class ApplicationBanco(tk.Toplevel):
         self.text_result.delete('1.0', tk.END)
         self.text_result.insert(tk.END, message)
 
+    def export_consolidado(self):
+        if self.consolidado_df is not None:
+            file_type = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx"), ("CSV files", "*.csv")])
+            if file_type:
+                # Remove colunas completamente vazias
+                self.consolidado_df = self.consolidado_df.loc[:, ~self.consolidado_df.columns.str.contains('^Unnamed')]
+
+                if file_type.endswith('.xlsx'):
+                    self.consolidado_df.to_excel(file_type, index=False)
+                elif file_type.endswith('.csv'):
+                    self.consolidado_df.to_csv(file_type, index=False)
+                messagebox.showinfo("Exportar", "Consolidado exportado com sucesso.")
+            else:
+                messagebox.showinfo("Ação necessária", "Exportação cancelada.")
+        else:
+            messagebox.showerror("Erro", "Nenhum consolidado para exportar. Por favor, processe os arquivos primeiro.")
+
     def export_result(self):
         if self.last_result is not None and not self.last_result.empty:
             file_type = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx"), ("CSV files", "*.csv")])
             if file_type:
+                # Remove colunas completamente vazias
+                self.last_result = self.last_result.loc[:, ~self.last_result.columns.str.contains('^Unnamed')]
+
                 if file_type.endswith('.xlsx'):
                     self.last_result.to_excel(file_type, index=False)
                 elif file_type.endswith('.csv'):
                     self.last_result.to_csv(file_type, index=False)
-                messagebox.showinfo("Exportar", "Resultado exportado com sucesso.")
+                messagebox.showinfo("Exportar", "Resultados exportados com sucesso.")
             else:
                 messagebox.showinfo("Ação necessária", "Exportação cancelada.")
         else:
@@ -158,12 +189,12 @@ class ApplicationBanco(tk.Toplevel):
 
     def clear_results(self):
         self.text_result.delete('1.0', tk.END)
-        self.btn_select_movimento.config(bg='light grey')
-        self.btn_select_ax.config(bg='light grey')
         self.movimento_file_path = ""
         self.ax_file_path = ""
-        self.last_result = None
+        self.consolidado_df = None  # Limpa o DataFrame consolidado
 
 if __name__ == "__main__":
-    app = ApplicationBanco()
+    root = tk.Tk()
+    root.withdraw()  # Esconde a janela principal
+    app = ApplicationBanco(master=root)
     app.mainloop()

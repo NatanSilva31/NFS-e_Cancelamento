@@ -51,6 +51,7 @@ class ApplicationComparador(tk.Toplevel):
         super().__init__(master)  # Chama o inicializador da classe base corretamente
         self.title("Sistema de Validação")
         self.geometry("800x600")
+        self.iconbitmap("Imagens/512x512bb.ico")
         self.create_widgets()
         self.ax_file_path = ""  # Inicializa a variável
         self.prefeitura_file_path = ""  # Inicializa a variável

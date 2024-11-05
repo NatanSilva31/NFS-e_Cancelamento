@@ -9,6 +9,7 @@ class MainApplication(tk.Tk):
         super().__init__()
         self.title("Menu Principal")
         self.geometry("600x200")
+        self.iconbitmap("Imagens/512x512bb.ico")
         self.create_widgets()
 
     def create_widgets(self):
