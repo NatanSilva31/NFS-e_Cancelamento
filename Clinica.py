@@ -44,7 +44,6 @@ class ApplicationClinica(tk.Toplevel):
         super().__init__(master)
         self.title("Comparativo de Planilhas")
         self.geometry("1000x600")
-        self.iconbitmap("Imagens/512x512bb.ico")
         self.create_widgets()
         self.ax_file_path = None
         self.clinica_file_path = None

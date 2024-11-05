@@ -48,7 +48,6 @@ class ApplicationBanco(tk.Toplevel):
         super().__init__(master)
         self.title("Sistema de Validação")
         self.geometry("800x600")
-        self.iconbitmap("Imagens/512x512bb.ico")
         self.create_widgets()
         self.movimento_file_path = ""
         self.ax_file_path = ""

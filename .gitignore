@@ -1,0 +1,54 @@
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Diretórios e arquivos do Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.env
+venv/
+env/
+*.sqlite3
+*.log
+*.db
+*.bak
+
+# Arquivos de configuração do VSCode
+.vscode/
+
+# Diretórios de build e cache
+build/
+dist/
+*.egg-info/
+*.eggs/
+*.manifest
+*.spec
+
+# Cache do pip
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Arquivos do Expo (React Native com TypeScript)
+.expo/
+.expo-shared/
+node_modules/
+*.log
+*.env
+*.expo
+
+# Configurações e cache do TypeScript
+*.tsbuildinfo
+
+# Imagens de build (você pode incluir outras imagens aqui se não quiser incluí-las no repositório)
+Imagens/
+512x512bb.ico
+
+# Arquivos específicos de pacotes npm
+package-lock.json
+
+# Arquivos do sistema Windows
+Thumbs.db
+desktop.ini
