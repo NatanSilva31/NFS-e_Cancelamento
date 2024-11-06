@@ -32,7 +32,7 @@ def consolidar_planilhas_movimento(caminho_movimento):
 
 # Comparação das colunas 'Nosso Número' do consolidado e 'Fatura' da planilha AX
 def comparar_consolidado_ax(consolidado_df, caminho_ax):
-    ax_df = ler_planilha(caminho_ax, skiprows=8)
+    ax_df = ler_planilha(caminho_ax, skiprows=11)
 
     # Convertendo as colunas para o tipo adequado
     consolidado_df['Nosso Número'] = consolidado_df['Nosso Número'].astype(float)

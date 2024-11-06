@@ -28,7 +28,7 @@ def remover_total(df):
     return df
 
 def comparar_planilhas(planilha_ax, planilha_clinica):
-    ax_df = remover_total(ler_planilha(planilha_ax, skiprows=8))  # Lê e remove totais
+    ax_df = remover_total(ler_planilha(planilha_ax, skiprows=11))  # Lê e remove totais
     clinica_df = ler_planilha(planilha_clinica)  # Lê a Planilha Clínica diretamente
 
     ax_df = converter_para_string(ax_df, 'Fatura')
